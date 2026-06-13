@@ -69,7 +69,7 @@ export const equipmentApi = {
 };
 
 export const orderApi = {
-  getList: (params?: { status?: string }) =>
+  getList: (params?: { status?: string; mineOnly?: boolean }) =>
     api.get<Order[]>('/orders', { params }).then((r) => r.data),
   getDetail: (id: string) => api.get<Order>(`/orders/${id}`).then((r) => r.data),
   create: (data: { equipmentId: string; startDate: string; endDate: string }) =>

@@ -34,10 +34,10 @@ export function getOrderList(req: Request, res: Response) {
     return;
   }
 
-  const { status } = req.query as { status?: string };
+  const { status, mineOnly } = req.query as { status?: string; mineOnly?: string };
   let result = orders.map(syncOrderStatus);
 
-  if (currentUser.role === 'user') {
+  if (mineOnly === 'true' || currentUser.role === 'user') {
     result = result.filter((o) => o.userId === currentUser.userId);
   }
 
@@ -179,7 +179,7 @@ export function returnOrder(req: Request, res: Response) {
     damageCondition,
     damageNote,
     damageFee,
-    refundAmount: Math.max(0, order.deposit - damageFee),
+    refundAmount: Math.max(0, order.deposit - damageFee - order.overdueFee),
     status: 'completed',
   };
 

@@ -23,7 +23,7 @@ export default function MyOrders() {
   const fetchOrders = async (status?: string) => {
     setLoading(true);
     try {
-      const list = await orderApi.getList(status ? { status } : undefined);
+      const list = await orderApi.getList({ status, mineOnly: true });
       setOrders(list);
     } finally {
       setLoading(false);

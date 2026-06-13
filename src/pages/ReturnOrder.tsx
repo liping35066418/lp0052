@@ -52,7 +52,7 @@ export default function ReturnOrder() {
   };
 
   const damageFee = calculateDamageFee();
-  const refundAmount = order ? Math.max(0, order.deposit + order.overdueFee > damageFee ? order.deposit - damageFee : 0) : 0;
+  const refundAmount = order ? Math.max(0, order.deposit - damageFee - order.overdueFee) : 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,7 +110,7 @@ export default function ReturnOrder() {
             {order.overdueFee > 0 && (
               <div className="flex justify-between py-2 border-b border-gray-200">
                 <span className="text-gray-500">逾期费用</span>
-                <span className="font-medium text-red-600">¥{order.overdueFee}</span>
+                <span className="font-medium text-red-600">-¥{order.overdueFee}</span>
               </div>
             )}
             <div className="flex justify-between py-3 pt-4">
