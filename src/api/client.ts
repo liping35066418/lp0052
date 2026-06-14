@@ -59,7 +59,8 @@ export const equipmentApi = {
   getCategories: () => api.get<Category[]>('/equipment/categories').then((r) => r.data),
   getList: (params?: { categoryId?: string; keyword?: string; startDate?: string; endDate?: string }) =>
     api.get<Equipment[]>('/equipment', { params }).then((r) => r.data),
-  getDetail: (id: string) => api.get<Equipment>(`/equipment/${id}`).then((r) => r.data),
+  getDetail: (id: string, params?: { startDate?: string; endDate?: string }) =>
+    api.get<Equipment>(`/equipment/${id}`, { params }).then((r) => r.data),
   create: (data: Partial<Equipment>) => api.post<Equipment>('/equipment', data).then((r) => r.data),
   update: (id: string, data: Partial<Equipment>) =>
     api.put<Equipment>(`/equipment/${id}`, data).then((r) => r.data),

@@ -25,6 +25,7 @@ export interface Equipment {
   condition: EquipmentCondition;
   stock: number;
   availableStock?: number;
+  borrowedCount?: number;
   dailyRate: number;
   deposit: number;
   status: EquipmentStatus;
@@ -71,6 +72,13 @@ export interface DashboardStats {
     stock: number;
     dailyRate: number;
     orderCount: number;
+  }>;
+  equipmentStockStatus: Array<{
+    id: string;
+    name: string;
+    totalStock: number;
+    borrowedCount: number;
+    availableStock: number;
   }>;
 }
 

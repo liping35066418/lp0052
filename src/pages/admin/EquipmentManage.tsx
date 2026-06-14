@@ -171,10 +171,11 @@ export default function EquipmentManage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">器材</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">分类</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">成色</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">库存</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">总库存</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">当前在借</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">当前可借</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">日租金</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">押金</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">状态</th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">操作</th>
                   </tr>
                 </thead>
@@ -200,16 +201,19 @@ export default function EquipmentManage() {
                             <Layers className="w-3.5 h-3.5" /> {eq.stock}
                           </button>
                         </td>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900">¥{eq.dailyRate}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">¥{eq.deposit}</td>
+                        <td className="px-6 py-4">
+                          <span className="badge bg-blue-100 text-blue-700">{eq.borrowedCount ?? 0} 件</span>
+                        </td>
                         <td className="px-6 py-4">
                           <span className={cn(
                             'badge',
-                            eq.stock > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                            (eq.availableStock ?? eq.stock) > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                           )}>
-                            {eq.status}
+                            {eq.availableStock ?? eq.stock} 件
                           </span>
                         </td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900">¥{eq.dailyRate}</td>
+                        <td className="px-6 py-4 text-sm text-gray-600">¥{eq.deposit}</td>
                         <td className="px-6 py-4 text-right">
                           <div className="inline-flex gap-1">
                             <button

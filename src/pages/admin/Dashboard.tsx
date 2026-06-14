@@ -58,34 +58,75 @@ export default function Dashboard() {
               ))}
             </div>
 
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">热门器材排行</h2>
-              {stats?.topEquipment.length === 0 ? (
-                <p className="text-gray-400 text-center py-8">暂无数据</p>
-              ) : (
-                <div className="space-y-3">
-                  {stats?.topEquipment.map((eq, i) => (
-                    <div key={eq.id} className="flex items-center gap-4">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
-                        i === 0 ? 'bg-amber-100 text-amber-700' :
-                        i === 1 ? 'bg-gray-200 text-gray-700' :
-                        i === 2 ? 'bg-orange-100 text-orange-700' :
-                        'bg-gray-100 text-gray-500'
-                      }`}>
-                        {i + 1}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">器材实时盘点</h2>
+                {stats?.equipmentStockStatus.length === 0 ? (
+                  <p className="text-gray-400 text-center py-8">暂无数据</p>
+                ) : (
+                  <div className="space-y-3">
+                    {stats?.equipmentStockStatus.map((eq) => (
+                      <div key={eq.id} className="flex items-center gap-4 p-3 rounded-xl bg-gray-50">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-800 truncate">{eq.name}</div>
+                          <div className="text-xs text-gray-500 mt-0.5">总库存 {eq.totalStock} 件</div>
+                        </div>
+                        <div className="text-center px-3">
+                          <div className="text-sm font-bold text-blue-600">{eq.borrowedCount}</div>
+                          <div className="text-xs text-gray-400">在借</div>
+                        </div>
+                        <div className="text-center px-3">
+                          <div className={`text-sm font-bold ${eq.availableStock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {eq.availableStock}
+                          </div>
+                          <div className="text-xs text-gray-400">可借</div>
+                        </div>
+                        <div className="w-24">
+                          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-blue-500 rounded-full"
+                              style={{ width: `${eq.totalStock > 0 ? (eq.borrowedCount / eq.totalStock) * 100 : 0}%` }}
+                            />
+                          </div>
+                          <div className="text-xs text-gray-400 mt-0.5 text-right">
+                            {eq.totalStock > 0 ? Math.round((eq.borrowedCount / eq.totalStock) * 100) : 0}% 在借
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-800 truncate">{eq.name}</div>
-                        <div className="text-xs text-gray-500">库存 {eq.stock} 件 · ¥{eq.dailyRate}/天</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">热门器材排行</h2>
+                {stats?.topEquipment.length === 0 ? (
+                  <p className="text-gray-400 text-center py-8">暂无数据</p>
+                ) : (
+                  <div className="space-y-3">
+                    {stats?.topEquipment.map((eq, i) => (
+                      <div key={eq.id} className="flex items-center gap-4">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
+                          i === 0 ? 'bg-amber-100 text-amber-700' :
+                          i === 1 ? 'bg-gray-200 text-gray-700' :
+                          i === 2 ? 'bg-orange-100 text-orange-700' :
+                          'bg-gray-100 text-gray-500'
+                        }`}>
+                          {i + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-800 truncate">{eq.name}</div>
+                          <div className="text-xs text-gray-500">库存 {eq.stock} 件 · ¥{eq.dailyRate}/天</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold text-primary-600">{eq.orderCount}</div>
+                          <div className="text-xs text-gray-400">租赁次数</div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold text-primary-600">{eq.orderCount}</div>
-                        <div className="text-xs text-gray-400">租赁次数</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </>
         )}

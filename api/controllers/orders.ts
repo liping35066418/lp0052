@@ -264,6 +264,8 @@ export function getDashboardStats(_req: Request, res: Response) {
     .filter((o) => o.status === 'completed')
     .reduce((sum, o) => sum + o.baseRent + o.overdueFee + o.damageFee, 0);
 
+  const today = format(new Date(), 'yyyy-MM-dd');
+
   const categoryStats = equipment.map((eq) => {
     const catOrderCount = syncedOrders.filter((o) => o.equipmentId === eq.id).length;
     return {
@@ -275,6 +277,18 @@ export function getDashboardStats(_req: Request, res: Response) {
     };
   }).sort((a, b) => b.orderCount - a.orderCount).slice(0, 5);
 
+  const equipmentStockStatus = equipment.map((eq) => {
+    const availableStock = getAvailableStock(equipment, orders, eq.id, today, today);
+    const borrowedCount = eq.stock - availableStock;
+    return {
+      id: eq.id,
+      name: eq.name,
+      totalStock: eq.stock,
+      borrowedCount,
+      availableStock,
+    };
+  });
+
   res.json({
     totalEquipment,
     totalStock,
@@ -283,5 +297,6 @@ export function getDashboardStats(_req: Request, res: Response) {
     overdueOrders,
     totalRevenue,
     topEquipment: categoryStats,
+    equipmentStockStatus,
   });
 }

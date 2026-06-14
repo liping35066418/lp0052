@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { format, addDays } from 'date-fns';
 import { Calendar, ShieldCheck, CreditCard, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
@@ -15,6 +15,8 @@ export default function EquipmentDetail() {
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(addDays(new Date(), 2), 'yyyy-MM-dd'));
+  const [availableStock, setAvailableStock] = useState<number>(0);
+  const [stockLoading, setStockLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -23,11 +25,29 @@ export default function EquipmentDetail() {
     if (!id) return;
     equipmentApi.getDetail(id).then((data) => {
       setEquipment(data);
+      setAvailableStock(data.availableStock ?? data.stock);
       setLoading(false);
     }).catch(() => {
       setLoading(false);
     });
   }, [id]);
+
+  const fetchAvailableStock = useCallback(async () => {
+    if (!id || !startDate || !endDate) return;
+    setStockLoading(true);
+    try {
+      const data = await equipmentApi.getDetail(id, { startDate, endDate });
+      setAvailableStock(data.availableStock ?? data.stock);
+    } catch {
+      setAvailableStock(0);
+    } finally {
+      setStockLoading(false);
+    }
+  }, [id, startDate, endDate]);
+
+  useEffect(() => {
+    fetchAvailableStock();
+  }, [fetchAvailableStock]);
 
   const rentalDays = useMemo(() => {
     if (!startDate || !endDate) return 0;
@@ -39,6 +59,7 @@ export default function EquipmentDetail() {
 
   const baseRent = (equipment?.dailyRate || 0) * rentalDays;
   const totalAmount = baseRent + (equipment?.deposit || 0);
+  const isOutOfStock = availableStock <= 0;
 
   const handleRent = async () => {
     if (!equipment) return;
@@ -52,6 +73,11 @@ export default function EquipmentDetail() {
 
     if (new Date(startDate) > new Date(endDate)) {
       setError('结束日期不能早于开始日期');
+      return;
+    }
+
+    if (isOutOfStock) {
+      setError('所选时段库存不足，无法租赁');
       return;
     }
 
@@ -114,16 +140,18 @@ export default function EquipmentDetail() {
                 <div className="font-semibold text-gray-800 mt-1">{equipment.condition}</div>
               </div>
               <div className="p-3 rounded-xl bg-gray-50">
-                <div className="text-xs text-gray-500">库存</div>
-                <div className="font-semibold text-gray-800 mt-1">{equipment.availableStock ?? equipment.stock} 件</div>
+                <div className="text-xs text-gray-500">总库存</div>
+                <div className="font-semibold text-gray-800 mt-1">{equipment.stock} 件</div>
+              </div>
+              <div className={cn('p-3 rounded-xl', isOutOfStock ? 'bg-red-50' : 'bg-green-50')}>
+                <div className="text-xs text-gray-500">当前可借</div>
+                <div className={cn('font-semibold mt-1', isOutOfStock ? 'text-red-600' : 'text-green-600')}>
+                  {stockLoading ? <Loader2 className="w-4 h-4 animate-spin inline" /> : `${availableStock} 件`}
+                </div>
               </div>
               <div className="p-3 rounded-xl bg-gray-50">
                 <div className="text-xs text-gray-500">日租金</div>
                 <div className="font-semibold text-primary-600 mt-1">¥{equipment.dailyRate}</div>
-              </div>
-              <div className="p-3 rounded-xl bg-gray-50">
-                <div className="text-xs text-gray-500">押金</div>
-                <div className="font-semibold text-gray-800 mt-1">¥{equipment.deposit}</div>
               </div>
             </div>
             <p className="text-gray-600 leading-relaxed">{equipment.description}</p>
@@ -139,6 +167,12 @@ export default function EquipmentDetail() {
               <span className="text-gray-500">/天</span>
             </div>
 
+            {isOutOfStock && !stockLoading && (
+              <div className="mt-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                所选时段库存不足，无法租赁
+              </div>
+            )}
             {error && (
               <div className="mt-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 shrink-0" />
@@ -179,6 +213,18 @@ export default function EquipmentDetail() {
               </div>
             </div>
 
+            <div className="mt-4 p-3 rounded-xl bg-blue-50 border border-blue-200">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-blue-700 flex items-center gap-1">
+                  {stockLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                  所选时段可借
+                </span>
+                <span className={cn('font-bold', isOutOfStock ? 'text-red-600' : 'text-blue-700')}>
+                  {availableStock} / {equipment.stock} 件
+                </span>
+              </div>
+            </div>
+
             <div className="mt-6 pt-6 border-t border-gray-100 space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">租期</span>
@@ -202,18 +248,20 @@ export default function EquipmentDetail() {
 
             <button
               onClick={handleRent}
-              disabled={submitting || (equipment.availableStock ?? equipment.stock) <= 0}
+              disabled={submitting || isOutOfStock || stockLoading}
               className={cn(
                 'w-full mt-6 py-3.5 rounded-xl text-white font-semibold text-lg transition-all',
-                (equipment.availableStock ?? equipment.stock) <= 0
+                isOutOfStock || stockLoading
                   ? 'bg-gray-300 cursor-not-allowed'
                   : 'bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 shadow-lg hover:shadow-xl hover:-translate-y-0.5'
               )}
             >
               {submitting ? (
                 <Loader2 className="w-5 h-5 animate-spin mx-auto" />
-              ) : (equipment.availableStock ?? equipment.stock) <= 0 ? (
-                '暂无库存'
+              ) : stockLoading ? (
+                '查询库存中...'
+              ) : isOutOfStock ? (
+                '所选时段暂无库存'
               ) : (
                 <span className="flex items-center justify-center gap-2">
                   <CreditCard className="w-5 h-5" />

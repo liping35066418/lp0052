@@ -7,7 +7,8 @@ interface Props {
 }
 
 export default function EquipmentCard({ equipment }: Props) {
-  const stockClass = (equipment.availableStock ?? equipment.stock) > 0
+  const available = equipment.availableStock ?? equipment.stock;
+  const stockClass = available > 0
     ? 'bg-green-100 text-green-700'
     : 'bg-red-100 text-red-700';
 
@@ -25,7 +26,7 @@ export default function EquipmentCard({ equipment }: Props) {
         />
         <div className="absolute top-3 left-3 flex gap-2">
           <span className={cn('badge', stockClass)}>
-            {(equipment.availableStock ?? equipment.stock) > 0 ? `库存 ${equipment.availableStock ?? equipment.stock}` : '暂无库存'}
+            {available > 0 ? `可借 ${available}` : '暂无可借'}
           </span>
         </div>
         <div className="absolute top-3 right-3">

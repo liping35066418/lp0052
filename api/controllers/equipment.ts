@@ -3,6 +3,7 @@ import { categories, equipment, stockLogs, orders } from '../data/store.js';
 import type { Equipment, EquipmentCondition, EquipmentStatus } from '../types/index.js';
 import { generateId, getAvailableStock } from '../utils/index.js';
 import { getCurrentUser } from '../middleware/auth.js';
+import { format } from 'date-fns';
 
 export function getCategories(_req: Request, res: Response) {
   res.json(categories);
@@ -26,12 +27,14 @@ export function getEquipmentList(req: Request, res: Response) {
     result = result.filter((eq) => eq.name.toLowerCase().includes(kw));
   }
 
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const sd = startDate || today;
+  const ed = endDate || today;
+
   const enriched = result.map((eq) => {
-    let availableStock = eq.stock;
-    if (startDate && endDate) {
-      availableStock = getAvailableStock(equipment, orders, eq.id, startDate, endDate);
-    }
-    return { ...eq, availableStock };
+    const availableStock = getAvailableStock(equipment, orders, eq.id, sd, ed);
+    const borrowedCount = eq.stock - availableStock;
+    return { ...eq, availableStock, borrowedCount };
   });
 
   res.json(enriched);
@@ -39,14 +42,24 @@ export function getEquipmentList(req: Request, res: Response) {
 
 export function getEquipmentDetail(req: Request, res: Response) {
   const { id } = req.params;
+  const { startDate, endDate } = req.query as {
+    startDate?: string;
+    endDate?: string;
+  };
+
   const eq = equipment.find((e) => e.id === id);
   if (!eq) {
     res.status(404).json({ error: '器材不存在' });
     return;
   }
 
-  const availableStock = eq.stock;
-  res.json({ ...eq, availableStock });
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const sd = startDate || today;
+  const ed = endDate || today;
+  const availableStock = getAvailableStock(equipment, orders, eq.id, sd, ed);
+  const borrowedCount = eq.stock - availableStock;
+
+  res.json({ ...eq, availableStock, borrowedCount });
 }
 
 export function createEquipment(req: Request, res: Response) {
